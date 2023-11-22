@@ -16,7 +16,7 @@
 
 <script>
 	export default {
-		name: 'addSignItem',
+		name: 'AzDragTemp',
 		props: {
 			// 唯一标识id
 			id: {
