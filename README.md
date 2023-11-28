@@ -70,8 +70,6 @@ uniapp 微信小程序 拖拽组件、可拖拽 插入图片或插入文案拖�
 
 ###### 插入文字（文字不可缩放）
 
-`
-
 ```vue
 <dragTemp :id="id" :width="100" :height="30" :limitX="limitX" :limitY="limitY" :limitWidth="100" :limitHeight="30" :scrollTop="scrollTop"
 		@click="showDate = true" @delete="(id) => { $emit('delete',id) }">
@@ -89,11 +87,7 @@ uniapp 微信小程序 拖拽组件、可拖拽 插入图片或插入文案拖�
 </dragTemp>
 ```
 
-`
-
 ###### 插入图片形式
-
-`
 
 ```vue
 <dragTemp :id="id" :width="100" :height="30" :limitX="limitX" :limitY="limitY" :limitWidth="100" :limitHeight="30" :scrollTop="scrollTop"
@@ -112,12 +106,9 @@ uniapp 微信小程序 拖拽组件、可拖拽 插入图片或插入文案拖�
 </dragTemp>
 ```
 
-`
-
 ###### interval-range-limi用途说明
 	举例：多页签署合同，每页底部需要一个页眉提示栏，页眉提示栏是不可拖拽组件到上面的，所以需要限制该范围的拖拽，触发条件在touchend拖拽结束后执行
 	以下代码并不完全，不能直接运行，仅供参考
-`
 ```vue
 <!-- 父组件调用 -->
 <view id="pagerChunk" class="pager">
@@ -147,9 +138,7 @@ uniapp 微信小程序 拖拽组件、可拖拽 插入图片或插入文案拖�
 	</addDateItem>
 </view>
 ```
-`
 
-`
 ```vue
 <!-- 根据业务封装的签名子组件 -->
 <az-drag-temp :id="id" :width="100" :height="30" :limitX="limitX" :limitY="limitY" :limitWidth="100" :limitHeight="30" :intervalRangeLimi="intervalRangeLimi" :scrollTop="scrollTop"
@@ -167,9 +156,7 @@ uniapp 微信小程序 拖拽组件、可拖拽 插入图片或插入文案拖�
 	</template>
 </az-drag-temp>
 ```
-`
 
-`
 ```vue
 <!-- 根据业务封装的日期选择组件 -->
 <az-drag-temp :id="id" :width="100" :height="30" :limitX="limitX" :limitY="limitY" :limitWidth="100" :limitHeight="30" :intervalRangeLimi="intervalRangeLimi" :scrollTop="scrollTop"
@@ -187,9 +174,6 @@ uniapp 微信小程序 拖拽组件、可拖拽 插入图片或插入文案拖�
 	</template>
 </az-drag-temp>
 ```
-`
-
-`
 
 ```javascript
 computed: {
@@ -243,4 +227,3 @@ methods: {
 	...
 }
 ```
-`
