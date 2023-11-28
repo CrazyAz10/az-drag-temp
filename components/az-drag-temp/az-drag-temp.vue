@@ -1,15 +1,13 @@
 <template>
 	<view :ref="id" :id="id" class="drag-temp" :style="ballStyle">
-		<view class="mask" @touchstart.stop="touchstart" @touchmove.stop="touchmove" @touchend.stop="touchend"></view>
+		<view class="mask" @touchstart.stop="touchstart" @touchmove.stop="(event) => {throttle(event, touchmove)}" @touchend.stop="touchend"></view>
 		<slot name="content"></slot>
 		<view v-if="!$slots.content" class="textbtn">
 			<text class="text">点击添加内容</text>
 		</view>
 		<view class="delete" :class="{'left-position': leftPosition}" @click.stop="deleteItem">
 		</view>
-		<view class="scale" :class="{'left-position': leftPosition}" @touchstart.stop="touchstart" @touchmove.stop="(e) => {
-				touchmove(e, true)
-			}" @touchend.stop="touchend">
+		<view class="scale" :class="{'left-position': leftPosition}" @touchstart.stop="(e) => { touchstart(e, true) }" @touchmove.stop="(event) => {throttle(event, touchmove)}" @touchend.stop="touchend">
 		</view>
 	</view>
 </template>
@@ -22,6 +20,11 @@
 			id: {
 				type: String,
 				default: 'temp_' + new Date().getTime()
+			},
+			// 拖拽壳层级权重
+			zIndex: {
+				type: Number,
+				default: 10
 			},
 			// 初始化定位X坐标
 			left: {
@@ -67,11 +70,23 @@
 					return [0, 0]
 				}
 			},
+			// 限制多组可移动范围
+			intervalRangeLimi: {
+				type: Array,
+				default: () => {
+					return []
+				}
+			},
 			// 当前滚动条高度
 			scrollTop: {
 				type: Number,
 				default: 0
 			},
+			// 节流间隔时长
+			throttleDelay: {
+				type: Number,
+				default: 20
+			}
 		},
 		data() {
 			return {
@@ -94,18 +109,20 @@
 				startY: null,
 				endX: null,
 				endY: null,
-				isMove: false
+				isMove: false,
+				scale: false,
+				timer: null
 			}
 		},
 		mounted() {
-			if (this.scrollTop !== 0) {
-				this.ballStyle.top = this.ballStyle.top.replace('px', '') * 1 + this.scrollTop + 'px'
-			}
 			if (this.width) {
 				this.ballStyle.width = this.width + 'px'
 			}
 			if (this.height) {
 				this.ballStyle.height = this.height + 'px'
+			}
+			if (this.zIndex) {
+				this.ballStyle.zIndex = this.zIndex
 			}
 			if (this.left) {
 				this.ballStyle.left = this.left + 'px'
@@ -113,26 +130,38 @@
 			if (this.top) {
 				this.ballStyle.top = this.top + 'px'
 			}
+			if (this.scrollTop !== 0) {
+				this.ballStyle.top = this.ballStyle.top.replace('px', '') * 1 + this.scrollTop + 'px'
+			}
 		},
 		methods: {
+			// 节流处理
+			throttle(event, fn) {
+				clearTimeout(this.timer)
+				this.timer = setTimeout(function () {
+					fn(event);
+					this.timer = null;
+				}, this.throttleDelay);
+			},
 			selectSign(item) {
 				this.signPath = item.filePath
 				this.show = false
 			},
-			touchstart(event) {
+			touchstart(event, scale = false) {
+				this.scale = scale
 				// 阻止事件冒泡
 				// event.stopPropagation();
 				this.startX = event.touches[0].clientX
 				this.startY = event.touches[0].clientY
 			},
-			touchmove(event, scale = false) {
+			touchmove(event) {
 				this.endX = event.touches[0].clientX
 				this.endY = event.touches[0].clientY
 				if (this.endX - this.startX != 0 || this.endY - this.startY != 0) {
 					// X 或 Y 定位有变动则证明正在移动
 					this.isMove = true
 				}
-				if (scale) {
+				if (this.scale) {
 					// 缩放
 					if (this.ballStyle.width.replace('px', '') * 1 + this.endX - this.startX <= this.limitWidth) {
 						this.ballStyle.width = this.limitWidth + 'px'
@@ -178,9 +207,79 @@
 			touchend(event) {
 				if (this.isMove) {
 					this.isMove = false
+					this.judgeRange()
 					return
 				}
 				this.$emit('click')
+			},
+			/**
+			 * 判断拖拽容器位置是否在禁拖区 多组禁拖区
+			 */
+			judgeRange() {
+				if (this.intervalRangeLimi.length) {
+					let wrapBox = [
+						[
+							this.ballStyle.left.replace('px', '') * 1, 
+							this.ballStyle.top.replace('px', '') * 1
+						],
+						[
+							this.ballStyle.left.replace('px', '') * 1 + this.ballStyle.width.replace('px', '') * 1, 
+							this.ballStyle.top.replace('px', '') * 1 + this.ballStyle.height.replace('px', '') * 1
+						]
+					]
+					for(let item of this.intervalRangeLimi) {
+						let wrapBoxWidth = wrapBox[1][0] - wrapBox[0][0]
+						let wrapBoxHeight = wrapBox[1][1] - wrapBox[0][1]
+						// x轴限制范围处理
+						if (
+							(wrapBox[0][0] >= item[0][0] && wrapBox[0][0] <= item[1][0]) ||
+							(wrapBox[1][0] >= item[0][0] && wrapBox[1][0] <= item[1][0]) ||
+							(item[0][0] >= wrapBox[0][0] && item[0][0] <= wrapBox[1][0]) ||
+							(item[1][0] >= wrapBox[0][0] && item[1][0] <= wrapBox[1][0]) 
+						) {
+							this.newDragPositionX(item, wrapBox)
+						}
+						// y轴限制范围处理
+						if (
+							(wrapBox[0][1] >= item[0][1] && wrapBox[0][1] <= item[1][1]) ||
+							(wrapBox[1][1] >= item[0][1] && wrapBox[1][1] <= item[1][1]) ||
+							(item[0][1] >= wrapBox[0][1] && item[0][1] <= wrapBox[1][1]) ||
+							(item[1][1] >= wrapBox[0][1] && item[1][1] <= wrapBox[1][1]) 
+						) {
+							this.newDragPositionY(item, wrapBox)
+						}
+					}
+				}
+			},
+			newDragPositionX(item, wrapBox) {
+				let tryNewX = item[0][0] - (wrapBox[1][0] - wrapBox[0][0])
+				if (tryNewX >= this.limitX[0] && tryNewX <= this.limitX[1]) {
+					// 新赋值的x范围在可移动范围可直接赋值
+					this.ballStyle.left = tryNewX + 'px'
+				} else {
+					tryNewX = item[1][0] + (wrapBox[1][0] - wrapBox[0][0])
+					if (tryNewX >= this.limitX[0] && tryNewX <= this.limitX[1]) {
+						// 新赋值的x范围在可移动范围可直接赋值
+						this.ballStyle.left = tryNewX + 'px'
+					} else {
+						// x轴两边都不可容纳 保持原状 移动Y轴来控制新的可拖拽位置
+					}
+				}
+			},
+			newDragPositionY(item, wrapBox) {
+				let tryNewY = item[0][1] - (wrapBox[1][1] - wrapBox[0][1])
+				if (tryNewY >= this.limitY[0] && tryNewY <= this.limitY[1]) {
+					// 新赋值的y范围在可移动范围可直接赋值
+					this.ballStyle.top = tryNewY + 'px'
+				} else {
+					tryNewY = item[1][1] + (wrapBox[1][1] - wrapBox[0][1])
+					if (tryNewY >= this.limitY[0] && tryNewY <= this.limitY[1]) {
+						// 新赋值的y范围在可移动范围可直接赋值
+						this.ballStyle.top = tryNewY + 'px'
+					} else {
+						// y轴两边都不可容纳 保持原状 移动X轴来控制新的可拖拽位置
+					}
+				}
 			},
 			/**
 			 * 删除操作
@@ -188,6 +287,9 @@
 			deleteItem() {
 				this.$emit('delete', this.id)
 			},
+			/**
+			 * 获取拖拽容器属性
+			 */
 			getAttribute() {
 				return {
 					id: this.id,
