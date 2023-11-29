@@ -34,6 +34,8 @@ uniapp 微信小程序 拖拽组件、可拖拽 插入图片或插入文案拖�
 ​			interval-range-limit 限制多组可移动范围 type: Array	[[x0,y0],[x1,y1]]
 
 ​			scroll-top 当前滚动条高度 用于计算在出现滚动条的时候滑动到底部可添加插件到可视区范围内 type: Number
+			
+			throttle-delay 节流间隙时长 type: Number 拖拽或缩放时，间隔多久触发一次响应事件
 
 ##### 		slot 插槽: 
 
