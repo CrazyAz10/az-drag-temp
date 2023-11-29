@@ -6,8 +6,10 @@
 			<text class="text">点击添加内容</text>
 		</view>
 		<view class="delete" :class="{'left-position': leftPosition}" @click.stop="deleteItem">
+			<view class="icon"></view>
 		</view>
 		<view class="scale" :class="{'left-position': leftPosition}" @touchstart.stop="(e) => { touchstart(e, true) }" @touchmove.stop="(event) => {throttle(event, touchmove)}" @touchend.stop="touchend">
+			<view class="icon"></view>
 		</view>
 	</view>
 </template>
@@ -37,12 +39,22 @@
 				default: 100
 			},
 			// 限制缩放最小宽度
-			limitWidth: {
+			limitMinWidth: {
 				type: Number,
 				default: 0
 			},
 			// 限制缩放最小高度
-			limitHeight: {
+			limitMinHeight: {
+				type: Number,
+				default: 0
+			},
+			// 限制缩放最大宽度
+			limitMaxWidth: {
+				type: Number,
+				default: 0
+			},
+			// 限制缩放最大高度
+			limitMaxHeight: {
 				type: Number,
 				default: 0
 			},
@@ -71,7 +83,7 @@
 				}
 			},
 			// 限制多组可移动范围
-			intervalRangeLimi: {
+			intervalRangeLimit: {
 				type: Array,
 				default: () => {
 					return []
@@ -163,13 +175,17 @@
 				}
 				if (this.scale) {
 					// 缩放
-					if (this.ballStyle.width.replace('px', '') * 1 + this.endX - this.startX <= this.limitWidth) {
-						this.ballStyle.width = this.limitWidth + 'px'
+					if (this.ballStyle.width.replace('px', '') * 1 + this.endX - this.startX <= this.limitMinWidth) {
+						this.ballStyle.width = this.limitMinWidth + 'px'
+					} else if (this.limitMaxWidth && this.ballStyle.width.replace('px', '') * 1 + this.endX - this.startX >= this.limitMaxWidth) {
+						this.ballStyle.width = this.limitMaxWidth + 'px'
 					} else {
 						this.ballStyle.width = this.ballStyle.width.replace('px', '') * 1 + this.endX - this.startX + 'px'
 					}
-					if (this.ballStyle.height.replace('px', '') * 1 + this.endY - this.startY <= this.limitHeight) {
-						this.ballStyle.height = this.limitHeight + 'px'
+					if (this.ballStyle.height.replace('px', '') * 1 + this.endY - this.startY <= this.limitMinHeight) {
+						this.ballStyle.height = this.limitMinHeight + 'px'
+					} else if (this.limitMaxHeight && this.ballStyle.height.replace('px', '') * 1 + this.endY - this.startY >= this.limitMaxHeight) {
+						this.ballStyle.height = this.limitMaxHeight + 'px'
 					} else {
 						this.ballStyle.height = this.ballStyle.height.replace('px', '') * 1 + this.endY - this.startY + 'px'
 					}
@@ -208,6 +224,7 @@
 				if (this.isMove) {
 					this.isMove = false
 					this.judgeRange()
+					this.$emit('change', this.getAttribute())
 					return
 				}
 				this.$emit('click')
@@ -216,7 +233,7 @@
 			 * 判断拖拽容器位置是否在禁拖区 多组禁拖区
 			 */
 			judgeRange() {
-				if (this.intervalRangeLimi.length) {
+				if (this.intervalRangeLimit.length) {
 					let wrapBox = [
 						[
 							this.ballStyle.left.replace('px', '') * 1, 
@@ -227,7 +244,7 @@
 							this.ballStyle.top.replace('px', '') * 1 + this.ballStyle.height.replace('px', '') * 1
 						]
 					]
-					for(let item of this.intervalRangeLimi) {
+					for(let item of this.intervalRangeLimit) {
 						let wrapBoxWidth = wrapBox[1][0] - wrapBox[0][0]
 						let wrapBoxHeight = wrapBox[1][1] - wrapBox[0][1]
 						// x轴限制范围处理
@@ -305,6 +322,36 @@
 </script>
 
 <style lang="scss" scoped>
+	@mixin icon-position($top,$bottom,$transformR,$transformL,$image) {
+		position: absolute;
+		right: 30rpx;
+		top: $top;
+		bottom: $bottom;
+		width: 96rpx;
+		height: 96rpx;
+		padding: 30rpx;
+		transform: $transformR;
+		.icon{
+			width: 100%;
+			height: 100%;
+			padding: 5rpx;
+			border-radius: 10rpx;
+			background-color: $uni-color-primary;
+			&::after{
+				content: '';
+				display: block;
+				width: 100%;
+				height: 100%;
+				background-image: url($image);
+				background-size: 100% 100%;
+			}
+		}
+		&.left-position {
+			left: 30rpx;
+			right: auto;
+			transform: $transformL;
+		}
+	}
 	.drag-temp {
 		border: 1px dashed rgb(38, 117, 236);
 
@@ -333,53 +380,11 @@
 		}
 
 		.delete {
-			position: absolute;
-			right: 0;
-			top: 0;
-			width: 36rpx;
-			height: 36rpx;
-			padding: 5rpx;
-			transform: translate(100%, -100%);
-			background-color: $uni-color-primary;
-			border-radius: 10rpx;
-			&::after{
-				content: '';
-				display: block;
-				width: 100%;
-				height: 100%;
-				background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAQlJREFUWEftlksOwzAIROFkbU+W5mRpT0aFZFtRGmCwW2XjbGOYZ75muvjji/VpAswIuBEQkTsR3Zh5zRZrtSWiNzO/LPsIQHaGTxSkiG/VlplNnQyA+gshjuIF4mFFIQvgQhjiNBIBrYEWSi8dljgRmbdXf2EbOo5bOnrFIQA95EFolRtRcm/eChRtLwfizAUkDkegKoAQsHgaIEiH/k6J/wMgnBPHfIVdsDcAU5CCgAFA8coLQ0AAXp8XRWhYnbVLCIAMGWRY9W5DaxR/VXsvRM8yMlvtp8sou1aDYWUWJRoBfdGs3svGa9fudVwm34K+hI6FJiLL0JMMXVQj58I2HHGO2E6AGYEPjSyeIYlc/BUAAAAASUVORK5CYII=");
-				background-size: 100% 100%;
-			}
-			&.left-position {
-				left: 0;
-				right: auto;
-				transform: translate(-100%, -100%);
-			}
+			@include icon-position(30rpx, auto, translate(100%, -100%), translate(-100%, -100%), "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAQlJREFUWEftlksOwzAIROFkbU+W5mRpT0aFZFtRGmCwW2XjbGOYZ75muvjji/VpAswIuBEQkTsR3Zh5zRZrtSWiNzO/LPsIQHaGTxSkiG/VlplNnQyA+gshjuIF4mFFIQvgQhjiNBIBrYEWSi8dljgRmbdXf2EbOo5bOnrFIQA95EFolRtRcm/eChRtLwfizAUkDkegKoAQsHgaIEiH/k6J/wMgnBPHfIVdsDcAU5CCgAFA8coLQ0AAXp8XRWhYnbVLCIAMGWRY9W5DaxR/VXsvRM8yMlvtp8sou1aDYWUWJRoBfdGs3svGa9fudVwm34K+hI6FJiLL0JMMXVQj58I2HHGO2E6AGYEPjSyeIYlc/BUAAAAASUVORK5CYII=")
 		}
 
 		.scale {
-			position: absolute;
-			right: 0;
-			bottom: 0;
-			width: 36rpx;
-			height: 36rpx;
-			padding: 5rpx;
-			transform: translate(100%, 100%);
-			background-color: $uni-color-primary;
-			border-radius: 10rpx;
-			&::after{
-				content: '';
-				display: block;
-				width: 100%;
-				height: 100%;
-				background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAc1JREFUWEfd179KHFEUx/HvIUUKwSKQgKJFiEWwUFCJREzQgAERixTmEWxFX0B9AdMJSZ3KP8+QbQJJkSIiqZI38AFSCD85chZ2x5nZcffeLbzt3HvuZ+6fc2ZMUgtYBh7RvH0ys73m3at7mqT/wOM+gs2a2UUf47qGOED9BDEz62dccUwVwLflsGaCSzO7ygnw2Kdm9jHFJHUxiivwE1jsGJAdUQRsADvA+2EhioBV4DdwBrwbBuIOwMxakp4G4m1uRCnAJ5U0FoilnIhKQCAmA/EqF6IWEIjngZjLgegJCMQUcA7MdCBW/bwMmicccATsAr/MbKEqoKSXwFdgHmiZmd+YgdttPpc007SwSFpJ8eZteZKCMsgyPCxA0+2R5N8fE2b2L9kKSPoGrPSqopK82B0Dfq2/JAH4mwMOaLfKKirpANhPfgglnQBbvRA5Af5Rewp8qENkA0Q+8cPliM0qRFZAIEYCsV6GyA4IxGgUsLUiYiiAQDwJRGfN8O35k+UWlKVjSc8C8abjuQOmk1/Dmio6HojXZX2SJKJ24EhIZfP4SviPjpf0rpYMIOlH4Z+iUZFMApD0AvjbaMbuTtdJAHHqPwPb90BcA99vAL532kBdSSq5AAAAAElFTkSuQmCC");
-				background-size: 100% 100%;
-			}
-			&.left-position {
-				left: 0;
-				right: auto;
-				transform: translate(-100%, 100%);
-			}
+			@include icon-position(auto, 30rpx, translate(100%, 100%), translate(-100%, 100%), "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAc1JREFUWEfd179KHFEUx/HvIUUKwSKQgKJFiEWwUFCJREzQgAERixTmEWxFX0B9AdMJSZ3KP8+QbQJJkSIiqZI38AFSCD85chZ2x5nZcffeLbzt3HvuZ+6fc2ZMUgtYBh7RvH0ys73m3at7mqT/wOM+gs2a2UUf47qGOED9BDEz62dccUwVwLflsGaCSzO7ygnw2Kdm9jHFJHUxiivwE1jsGJAdUQRsADvA+2EhioBV4DdwBrwbBuIOwMxakp4G4m1uRCnAJ5U0FoilnIhKQCAmA/EqF6IWEIjngZjLgegJCMQUcA7MdCBW/bwMmicccATsAr/MbKEqoKSXwFdgHmiZmd+YgdttPpc007SwSFpJ8eZteZKCMsgyPCxA0+2R5N8fE2b2L9kKSPoGrPSqopK82B0Dfq2/JAH4mwMOaLfKKirpANhPfgglnQBbvRA5Af5Rewp8qENkA0Q+8cPliM0qRFZAIEYCsV6GyA4IxGgUsLUiYiiAQDwJRGfN8O35k+UWlKVjSc8C8abjuQOmk1/Dmio6HojXZX2SJKJ24EhIZfP4SviPjpf0rpYMIOlH4Z+iUZFMApD0AvjbaMbuTtdJAHHqPwPb90BcA99vAL532kBdSSq5AAAAAElFTkSuQmCC")
 		}
 	}
 </style>

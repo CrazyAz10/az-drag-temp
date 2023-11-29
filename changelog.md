@@ -1,3 +1,10 @@
+## 1.0.6（2023-11-29）
+1.添加change回调事件 拖拽或缩放结束后触发
+2.优化关闭/缩放小图标点击范围 （小程序真机中难点中问题处理）
+3.props命名规范化 interval-range-limi => interval-range-limit ; limit-width => limit-min-width ; limit-height => limit-min-height
+4.添加最大缩放宽高 limit-max-width / limit-max-height
+## 1.0.5（2023-11-28）
+readme.md更新
 ## 1.0.4（2023-11-28）
 更新文档说明
 ## 1.0.3（2023-11-28）

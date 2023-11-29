@@ -19,15 +19,19 @@ uniapp 微信小程序 拖拽组件、可拖拽 插入图片或插入文案拖�
 
 ​			height 拖拽容器默认高度 type: Number
 
-​			limit-width 限制缩放最小宽度 type: Number
+​			limit-min-width 限制缩放最小宽度 type: Number
 
-​			limit-height 限制缩放最小高度 type: Number
+​			limit-min-height 限制缩放最小高度 type: Number
+
+​			limit-max-width 限制缩放最大宽度 type: Number
+
+​			limit-max-height 限制缩放最大高度 type: Number
 
 ​			limit-x 限制可移动的X范围 type: Array
 
 ​			limit-y 限制可移动的Y范围 type: Array
 
-​			interval-range-limi 限制多组可移动范围 type: Array	[[x0,y0],[x1,y1]]
+​			interval-range-limit 限制多组可移动范围 type: Array	[[x0,y0],[x1,y1]]
 
 ​			scroll-top 当前滚动条高度 用于计算在出现滚动条的时候滑动到底部可添加插件到可视区范围内 type: Number
 
@@ -40,6 +44,8 @@ uniapp 微信小程序 拖拽组件、可拖拽 插入图片或插入文案拖�
 ​			click 点击退拽内容区触发
 
 ​			delete 点击删除按钮触发
+
+			change 位置/大小发生变化触发
 
 ##### 		实例获取
 
@@ -71,7 +77,7 @@ uniapp 微信小程序 拖拽组件、可拖拽 插入图片或插入文案拖�
 ###### 插入文字（文字不可缩放）
 
 ```vue
-<dragTemp :id="id" :width="100" :height="30" :limitX="limitX" :limitY="limitY" :limitWidth="100" :limitHeight="30" :scrollTop="scrollTop"
+<dragTemp :id="id" :width="100" :height="30" :limitX="limitX" :limitY="limitY" :limitX="limitX" :limitY="limitY" :limit-min-width="50" :limit-min-height="20" :limit-max-height="60" :limit-max-width="200" :scrollTop="scrollTop"
 		@click="showDate = true" @delete="(id) => { $emit('delete',id) }">
         <template v-slot:content>
             <view class="text-no-wrap ps-rl" style="width: 100%;height: 100%;">
@@ -90,7 +96,7 @@ uniapp 微信小程序 拖拽组件、可拖拽 插入图片或插入文案拖�
 ###### 插入图片形式
 
 ```vue
-<dragTemp :id="id" :width="100" :height="30" :limitX="limitX" :limitY="limitY" :limitWidth="100" :limitHeight="30" :scrollTop="scrollTop"
+<dragTemp :id="id" :width="100" :height="30" :limitX="limitX" :limitY="limitY" :limitX="limitX" :limitY="limitY" :limit-min-width="50" :limit-min-height="20" :limit-max-height="60" :limit-max-width="200" :scrollTop="scrollTop"
 		@click="show = true" @delete="(id) => { $emit('delete',id) }">
 		<template v-slot:content>
 			<view style="width: 100%;height: 100%;">
@@ -141,7 +147,7 @@ uniapp 微信小程序 拖拽组件、可拖拽 插入图片或插入文案拖�
 
 ```vue
 <!-- 根据业务封装的签名子组件 -->
-<az-drag-temp :id="id" :width="100" :height="30" :limitX="limitX" :limitY="limitY" :limitWidth="100" :limitHeight="30" :intervalRangeLimi="intervalRangeLimi" :scrollTop="scrollTop"
+<az-drag-temp :id="id" :width="100" :height="30" :limitX="limitX" :limitY="limitY" :limitX="limitX" :limitY="limitY" :limit-min-width="50" :limit-min-height="20" :limit-max-height="60" :limit-max-width="200" :intervalRangeLimi="intervalRangeLimi" :scrollTop="scrollTop"
 	@click="show = true" @delete="(id) => { $emit('delete',id) }">
 	<template v-slot:content>
 		<view style="width: 100%;height: 100%;">
@@ -159,7 +165,7 @@ uniapp 微信小程序 拖拽组件、可拖拽 插入图片或插入文案拖�
 
 ```vue
 <!-- 根据业务封装的日期选择组件 -->
-<az-drag-temp :id="id" :width="100" :height="30" :limitX="limitX" :limitY="limitY" :limitWidth="100" :limitHeight="30" :intervalRangeLimi="intervalRangeLimi" :scrollTop="scrollTop"
+<az-drag-temp :id="id" :width="100" :height="30" :limitX="limitX" :limitY="limitY" :limitX="limitX" :limitY="limitY" :limit-min-width="50" :limit-min-height="20" :limit-max-height="60" :limit-max-width="200" :intervalRangeLimi="intervalRangeLimi" :scrollTop="scrollTop"
 	@click="showDate = true" @delete="(id) => { $emit('delete',id) }">
 	<template v-slot:content>
 		<view class="text-no-wrap ps-rl" style="width: 100%;height: 100%;">
