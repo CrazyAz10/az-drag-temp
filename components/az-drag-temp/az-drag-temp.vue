@@ -323,6 +323,7 @@
 
 <style lang="scss" scoped>
 	@mixin icon-position($top,$bottom,$transformR,$transformL,$image) {
+		box-sizing: border-box;
 		position: absolute;
 		right: 30rpx;
 		top: $top;
