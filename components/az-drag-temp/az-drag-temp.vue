@@ -5,10 +5,10 @@
 		<view v-if="!$slots.content" class="textbtn">
 			<text class="text">点击添加内容</text>
 		</view>
-		<view class="delete" :class="{'left-position': leftPosition}" @click.stop="deleteItem">
+		<view v-if="canDelete" class="delete" :class="{'left-position': leftPosition}" @click.stop="deleteItem">
 			<view class="icon"></view>
 		</view>
-		<view class="scale" :class="{'left-position': leftPosition}" @touchstart.stop="(e) => { touchstart(e, true) }" @touchmove.stop="(event) => {throttle(event, touchmove)}" @touchend.stop="touchend">
+		<view v-if="canScale" class="scale" :class="{'left-position': leftPosition}" @touchstart.stop="(e) => { touchstart(e, true) }" @touchmove.stop="(event) => {throttle(event, touchmove)}" @touchend.stop="touchend">
 			<view class="icon"></view>
 		</view>
 	</view>
@@ -27,6 +27,21 @@
 			zIndex: {
 				type: Number,
 				default: 10
+			},
+			// 是否可拖拽
+			canDrag: {
+				type: Boolean,
+				default: true
+			},
+			// 是否可缩放
+			canScale: {
+				type: Boolean,
+				default: true
+			},
+			// 是否可删除
+			canDelete: {
+				type: Boolean,
+				default: true
 			},
 			// 初始化定位X坐标
 			left: {
@@ -110,7 +125,6 @@
 					position: 'absolute',
 					zIndex: '10',
 					width: '100px',
-					fontSize: '12px',
 					height: '30px',
 					lineHeight: '28px',
 					textAlign: 'center',
@@ -127,24 +141,12 @@
 			}
 		},
 		mounted() {
-			if (this.width) {
-				this.ballStyle.width = this.width + 'px'
-			}
-			if (this.height) {
-				this.ballStyle.height = this.height + 'px'
-			}
-			if (this.zIndex) {
-				this.ballStyle.zIndex = this.zIndex
-			}
-			if (this.left) {
-				this.ballStyle.left = this.left + 'px'
-			}
-			if (this.top) {
-				this.ballStyle.top = this.top + 'px'
-			}
-			if (this.scrollTop !== 0) {
-				this.ballStyle.top = this.ballStyle.top.replace('px', '') * 1 + this.scrollTop + 'px'
-			}
+			if (this.width) this.ballStyle.width = this.width + 'px'
+			if (this.height) this.ballStyle.height = this.height + 'px'
+			if (this.zIndex) this.ballStyle.zIndex = this.zIndex
+			if (this.left) this.ballStyle.left = this.left + 'px'
+			if (this.top) this.ballStyle.top = this.top + 'px'
+			if (this.scrollTop !== 0) this.ballStyle.top = this.ballStyle.top.replace('px', '') * 1 + this.scrollTop + 'px'
 		},
 		methods: {
 			// 节流处理
@@ -190,6 +192,7 @@
 						this.ballStyle.height = this.ballStyle.height.replace('px', '') * 1 + this.endY - this.startY + 'px'
 					}
 				} else {
+					if (!this.canDrag) return
 					// 移动
 					// 可移动范围 X
 					if (this.ballStyle.left.replace('px', '') * 1 + this.endX - this.startX <= this.limitX[0]) {
@@ -227,7 +230,7 @@
 					this.$emit('change', this.getAttribute())
 					return
 				}
-				this.$emit('click')
+				this.$emit('click', this.id)
 			},
 			/**
 			 * 判断拖拽容器位置是否在禁拖区 多组禁拖区
@@ -313,8 +316,7 @@
 					width: this.ballStyle.width,
 					height: this.ballStyle.height,
 					left: this.ballStyle.left,
-					top: this.ballStyle.top,
-					fontSize: this.ballStyle.fontSize
+					top: this.ballStyle.top
 				}
 			},
 		}
